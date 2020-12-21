@@ -13,3 +13,5 @@ fi
 if ! command -v pre-commit &>/dev/null; then
   pip install pre-commit
 fi
+
+helm-docs "${@}"
