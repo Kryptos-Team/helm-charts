@@ -10,6 +10,10 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+env:
+  - name: CI
+    value: 1
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
