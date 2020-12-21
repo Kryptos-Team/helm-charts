@@ -1,0 +1,68 @@
+name: "helm-charts/test"
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
+      - name: Run lint
+        id: lint
+        uses: helm/chart-testing-action@v1.0.0-alpha.3
+        with:
+          command: lint
+          config: ct.yaml
+
+      - name: Install kubeval/helm
+        run: |
+          if ! command -v kubeval >/dev/null 2>&1; then
+            wget https://github.com/instrumenta/kubeval/releases/download/0.15.0/kubeval-linux-amd64.tar.gz
+            tar xf kubeval-linux-amd64.tar.gz
+            sudo mv kubeval /usr/local/bin/kubeval
+          else
+            echo "kubeval is already installed"
+          fi
+          if ! command -v helm >/dev/null 2>&1; then
+            sudo snap install helm --classic
+          fi
+      - name: Run kubeval
+        run: |
+          for chart_path in charts/*; do
+            echo "Validating $chart_path"
+            helm template --values "$chart_path/values.yaml" "$chart_path" | kubeval --strict --exit-on-error --output tap
+            if [ "$?" -ne 0 ]; then
+              exit 1
+            fi
+            echo ""
+          done
+
+       - name: Create kind cluster
+         uses: helm/kind-action@v1.0.0-alpha.3
+         # Only build a kind cluster if there are chart changes to test.
+         if: steps.lint.outputs.changed == 'true'
+
+       - name: Run install
+         uses: helm/chart-testing-action@v1.0.0-alpha.3
+         with:
+           command: install
+
+       - name: Run cleanup
+         if: always()
+         run: |
+           docker stop $(docker ps -aq)
+           docker rm $(docker ps -aq)
