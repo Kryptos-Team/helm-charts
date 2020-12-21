@@ -9,6 +9,7 @@ spec:
   selector:
     matchLabels:
       {{- include "charts.selectorLabels" . | nindent 6 }}
+  serviceName: "{{ include "charts.fullname" . }}"
   template:
     metadata:
       labels:
