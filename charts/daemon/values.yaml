@@ -11,8 +11,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 env:
-  - name: CI
-    value: 1
+  CI: 1
 
 serviceAccount:
   # Specifies whether a service account should be created
