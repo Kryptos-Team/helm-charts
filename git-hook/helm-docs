@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -e
+
+VERSION=1.4.0
+
+if ! command -v helm-docs &>/dev/null; then
+  wget https://github.com/norwoodj/helm-docs/releases/download/v"${VERSION}"/helm-docs_"${VERSION}"_linux_amd64.deb
+  sudo dpkg -i helm-docs_"${VERSION}"_linux_amd64.deb
+  rm helm-docs_"${VERSION}"_linux_amd64.deb
+fi
+
+if ! command -v pre-commit &>/dev/null; then
+  pip install pre-commit
+fi
+
+helm-docs "${@}"
